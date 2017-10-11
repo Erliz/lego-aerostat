@@ -5,5 +5,5 @@ stepper = require("stepper")
 app = require("app")
 
 network.start(function()
-    app.start()
+  app.start()
 end)

@@ -1,42 +1,42 @@
 local module = {}
 m = nil
 
--- Sends a simple ping to the broker
-local function send_ping()  
-    m:publish(config.MQTT.STATE .. "ping","id=" .. config.ID, 0, 0)
+local function sendPing()
+  m:publish(config.MQTT.STATE .. "ping", "id=" .. config.ID, 0, 0)
 end
 
--- Sends my id to the broker for registration
-local function register_myself()  
-    m:subscribe(config.MQTT.TELEMETRY .. config.ID, 0, function(conn)
-        print("Successfully subscribed to data endpoint")
-    end)
+local function registerMyself()
+  print(module.getTelmetryTopic())
+  m:subscribe(module.getTelmetryTopic(), 0, function(conn)
+    print("Successfully subscribed to data endpoint " .. module.getTelmetryTopic())
+  end)
+  print(module.getConfigTopic())
+  m:subscribe(module.getConfigTopic(), 0, function(conn)
+    print("Successfully subscribed to data endpoint " .. module.getConfigTopic())
+  end)
 end
 
-local function mqtt_start()  
-    m = mqtt.Client(config.ID, 120, config.MQTT.LOGIN, config.MQTT.PASSWORD)
-    -- register message callback beforehand
-    m:on("message", app.onMessage)
-    -- Connect to broker
-    m:connect(config.MQTT.HOST, config.MQTT.PORT, 0, function(client) 
-        register_myself()
-        -- And then pings each 1000 milliseconds
-        tmr.stop(6)
-        tmr.alarm(6, 30000, 1, send_ping)
-    end) 
-
-end
-
-local function mqtt_stop()
-    m:close()
-end
-
-function module.start()  
-  mqtt_start()
+function module.start(callback)
+  m = mqtt.Client(config.ID, 120, config.MQTT.LOGIN, config.MQTT.PASSWORD)
+  m:on("message", callback)
+  m:connect(config.MQTT.HOST, config.MQTT.PORT, 0, function(client)
+    registerMyself()
+    tmr.stop(6)
+    sendPing()
+    tmr.alarm(6, 30000, 1, sendPing)
+  end)
 end
 
 function module.stop()
-  mqtt_stop()
+  m:close()
+end
+
+function module.getTelmetryTopic()
+  return config.MQTT.TELEMETRY .. config.ID
+end
+
+function module.getConfigTopic()
+  return config.MQTT.CONFIG .. config.ID
 end
 
 return module
