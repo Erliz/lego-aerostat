@@ -28,6 +28,10 @@ local function onMessage(client, topic, data)
   end
 end
 
+local function onError()
+  module.fly()
+end
+
 function module.fly()
   fly_count = fly_count + 1
   print("Fly count: " .. fly_count)
@@ -47,7 +51,7 @@ end
 
 function module.start()
 stepper.start()
-broker.start(onMessage)
+broker.start(onMessage, onError)
 print("Successfully init application")
 end
 

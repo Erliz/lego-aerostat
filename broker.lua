@@ -16,7 +16,7 @@ local function registerMyself()
   end)
 end
 
-function module.start(callback)
+function module.start(callback, onError)
   m = mqtt.Client(config.ID, 120, config.MQTT.LOGIN, config.MQTT.PASSWORD)
   m:on("message", callback)
   m:connect(config.MQTT.HOST, config.MQTT.PORT, 0, function(client)
@@ -24,6 +24,12 @@ function module.start(callback)
     tmr.stop(6)
     sendPing()
     tmr.alarm(6, 30000, 1, sendPing)
+  end,
+  function(client, reason)
+    print("Faild to connect to mqtt broker with reason: " .. reason)
+    if (onError) then
+        onError()
+    end
   end)
 end
 
